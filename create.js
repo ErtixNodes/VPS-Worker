@@ -33,8 +33,8 @@ module.exports = async (job) => {
 
     await job.updateProgress('Added firewall rules.');
 
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo 'http://mirror.ertixnodes.xyz/alpine/v3.19/main' > /etc/apk/repositories"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo 'http://mirror.ertixnodes.xyz/alpine/v3.19/community' >> /etc/apk/repositories"`);
+    await shell.exec(`pct exec ${proxID} sh -- -c "echo 'https://dl-cdn.alpinelinux.org/alpine/v3.19/main' > /etc/apk/repositories"`);
+    await shell.exec(`pct exec ${proxID} sh -- -c "echo 'https://dl-cdn.alpinelinux.org/alpine/v3.19/community' >> /etc/apk/repositories"`);
     await job.updateProgress('Added custom mirror');
 
     await shell.exec(`pct exec ${proxID} sh -- -c "apk update"`);
