@@ -3,7 +3,8 @@ const shell = require('shelljs');
 const lib = require('./lib');
 const fs = require('fs');
 
-const { OS } = process.env;
+let { OS, BRAND } = process.env;
+if (!BRAND) BRAND = 'VPS';
 
 module.exports = async (job) => {
     var data = job.data;
@@ -53,7 +54,7 @@ module.exports = async (job) => {
         await shell.exec(`pct exec ${proxID} sh -- -c "rc-update add sshd"`);
         await job.updateProgress('Allow ssh');
 
-        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tFree VPS by ErtixNodes.' > /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tFree VPS by ${BRAND}.' > /etc/motd"`);
         await shell.exec(`pct exec ${proxID} sh -- -c "echo '\t' >> /etc/motd"`);
         await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tPackage manager: apk' >> /etc/motd"`);
         await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tYour vps ID: ${data.shortID}' >> /etc/motd"`);
@@ -109,13 +110,13 @@ module.exports = async (job) => {
             await job.updateProgress('Added firewall rules.');
         }
         await shell.exec(`pct exec ${proxID} sh -- -c "apt update -y"`);
-        await shell.exec(`pct exec ${proxID} sh -- -c "apt install -y openssh zsh git wget curl htop sudo bash htop neofetch"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "apt install -y openssh zsh git micro nano wget curl htop sudo bash htop neofetch"`);
         await shell.exec(`pct exec ${proxID} sh -- -c "echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"`);
         // sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd
-        await shell.exec(`pct exec ${proxID} sh -- -c "rc-update add sshd"`);
+        // await shell.exec(`pct exec ${proxID} sh -- -c "rc-update add sshd"`);
         await job.updateProgress('Allow ssh');
 
-        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tFree VPS by ErtixNodes.' > /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tFree VPS by ${BRAND}.' > /etc/motd"`);
         await shell.exec(`pct exec ${proxID} sh -- -c "echo '\t' >> /etc/motd"`);
         await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tPackage manager: apk' >> /etc/motd"`);
         await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tYour vps ID: ${data.shortID}' >> /etc/motd"`);
@@ -125,7 +126,7 @@ module.exports = async (job) => {
         await shell.exec(`pct exec ${proxID} sh -- -c "bash <(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`);
         await job.updateProgress('Oh my zsh');
 
-        await shell.exec(`pct exec ${proxID} sh -- -c "sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "sed -i 's#/bin/bash#/bin/zsh#' /etc/passwd"`);
         await lib.addForward(data.portID, 22, data.sshPort, data.ip);
 
         await job.updateProgress('Port forwarded!');
