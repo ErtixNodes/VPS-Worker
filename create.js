@@ -1,6 +1,7 @@
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const shell = require('shelljs');
 const lib = require('./lib');
+const fs = require('fs');
 
 const { OS } = process.env;
 
@@ -153,7 +154,7 @@ function getCreateCMD(id, ip, password, path, storage, data) {
 
     cmd += ` ${path} `
     cmd += `--swap=256 `;
-    cmd += `--hostname=alpine${id}-${data.shortID} `;
+    cmd += `--hostname=${data.ostype}${id}-${data.shortID} `;
     cmd += `--memory=1024 `;
     cmd += `--cmode=shell `;
     cmd += `--net0 name=eth0,bridge=vmbr0,firewall=1,gw=${data.subnet},ip=${ip}/16,rate=3 `;

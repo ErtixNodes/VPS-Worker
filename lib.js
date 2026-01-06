@@ -1,6 +1,10 @@
 const shell = require('shelljs');
 const fs = require('fs');
 
+if (!fs.existsSync('/port')) {
+    fs.mkdirSync('/port');
+}
+
 async function addForward(ID, int, ext, ip) {
     console.log(`Adding ${ID} - :${ext} -> ${ip}:${int}`);
     // echo "iptables -t nat -A PREROUTING -p TCP --dport 3$(echo $ID)0 -j DNAT --to-destination $(echo $IP):22" >> $PN
