@@ -2,6 +2,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const shell = require('shelljs');
 const lib = require('./lib');
 
+const { OS } = process.env;
+
 module.exports = async (job) => {
     var data = job.data;
     var id = job.id;
@@ -19,64 +21,118 @@ module.exports = async (job) => {
 
     await job.updateProgress(`Got proxmox ID: ${proxID}`);
 
-    var vpsCreateRes = await shell.exec(getCreateCMD(proxID, data.ip, data.password, '/var/lib/vz/template/cache/alpine-3.19-default_20240207_amd64.tar.xz', data.storage, data));
+    if (OS == 'alpine') {
+        var vpsCreateRes = await shell.exec(getCreateCMD(proxID, data.ip, data.password, '/var/lib/vz/template/cache/alpine-3.19-default_20240207_amd64.tar.xz', data.storage, data));
 
-    // console.log(vpsCreateRes);
+        // console.log(vpsCreateRes);
 
-    if (vpsCreateRes.stderr.length > 0) throw new Error(`Error: ${vpsCreateRes.stderr}`);
+        if (vpsCreateRes.stderr.length > 0) throw new Error(`Error: ${vpsCreateRes.stderr}`);
 
-    // console.log((await shell.exec('pct start ' + proxID)).stderr);
+        // console.log((await shell.exec('pct start ' + proxID)).stderr);
 
-    await job.updateProgress('Empty vps created');
+        await job.updateProgress('Empty vps created');
 
-    console.log((await shell.exec(`cp /etc/pve/firewall/100.fw /etc/pve/firewall/${proxID}.fw`)).stderr);
+        console.log((await shell.exec(`cp /etc/pve/firewall/100.fw /etc/pve/firewall/${proxID}.fw`)).stderr);
 
-    await job.updateProgress('Added firewall rules.');
+        await job.updateProgress('Added firewall rules.');
 
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo 'https://dl-cdn.alpinelinux.org/alpine/v3.19/main' > /etc/apk/repositories"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo 'https://dl-cdn.alpinelinux.org/alpine/v3.19/community' >> /etc/apk/repositories"`);
-    await job.updateProgress('Added custom mirror');
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo 'https://dl-cdn.alpinelinux.org/alpine/v3.19/main' > /etc/apk/repositories"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo 'https://dl-cdn.alpinelinux.org/alpine/v3.19/community' >> /etc/apk/repositories"`);
+        await job.updateProgress('Added custom mirror');
 
-    await shell.exec(`pct exec ${proxID} sh -- -c "apk update"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "apk add wget"`);
-    await job.updateProgress('Download wget');
+        await shell.exec(`pct exec ${proxID} sh -- -c "apk update"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "apk add wget"`);
+        await job.updateProgress('Download wget');
 
-    await shell.exec(`pct exec ${proxID} sh -- -c "apk update"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "apk add openssh zsh git wget curl htop sudo bash htop neofetch"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"`);
-    // sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd
-     await shell.exec(`pct exec ${proxID} sh -- -c "rc-update add sshd"`);
-    await job.updateProgress('Allow ssh');
+        await shell.exec(`pct exec ${proxID} sh -- -c "apk update"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "apk add openssh zsh git wget curl htop sudo bash htop neofetch"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"`);
+        // sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd
+        await shell.exec(`pct exec ${proxID} sh -- -c "rc-update add sshd"`);
+        await job.updateProgress('Allow ssh');
 
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tFree VPS by ErtixNodes.' > /etc/motd"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo '\t' >> /etc/motd"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tPackage manager: apk' >> /etc/motd"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tYour vps ID: ${data.shortID}' >> /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tFree VPS by ErtixNodes.' > /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\t' >> /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tPackage manager: apk' >> /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tYour vps ID: ${data.shortID}' >> /etc/motd"`);
 
-    await job.updateProgress('Motd');
+        await job.updateProgress('Motd');
 
-    await shell.exec(`pct exec ${proxID} sh -- -c "bash <(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`);
-    await job.updateProgress('Oh my zsh');
+        await shell.exec(`pct exec ${proxID} sh -- -c "bash <(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`);
+        await job.updateProgress('Oh my zsh');
 
-    await shell.exec(`pct exec ${proxID} sh -- -c "sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd"`);
-    
-    await shell.exec(`pct exec ${proxID} sh -- -c "wget https://raw.githubusercontent.com/ErtixNodes/Scripts/main/apt -O /bin/apt"`);
-    await shell.exec(`pct exec ${proxID} sh -- -c "chmod 777 /bin/apt"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd"`);
 
-    await job.updateProgress('Add apt');
+        await shell.exec(`pct exec ${proxID} sh -- -c "wget https://raw.githubusercontent.com/ErtixNodes/Scripts/main/apt -O /bin/apt"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "chmod 777 /bin/apt"`);
 
-    await lib.addForward(data.portID, 22, data.sshPort, data.ip);
+        await job.updateProgress('Add apt');
 
-    await job.updateProgress('Port forwarded!');
+        await lib.addForward(data.portID, 22, data.sshPort, data.ip);
 
-    await shell.exec('pct reboot ' + proxID);
+        await job.updateProgress('Port forwarded!');
 
-    await job.updateProgress('VPS restarted!');
+        await shell.exec('pct reboot ' + proxID);
+
+        await job.updateProgress('VPS restarted!');
 
         // Add custom ertixnodes repo :D
-    await shell.exec(`pct exec ${proxID} sh -- -c "wget https://raw.githubusercontent.com/ErtixNodes/pkg/feat-ci/setup.sh -O /pkg.sh"`);
-    await shell.exec(`pct exec ${proxID} zsh -- /pkg.sh`);
-    await job.updateProgress('Added command logger');
+        await shell.exec(`pct exec ${proxID} sh -- -c "wget https://raw.githubusercontent.com/ErtixNodes/pkg/feat-ci/setup.sh -O /pkg.sh"`);
+        await shell.exec(`pct exec ${proxID} zsh -- /pkg.sh`);
+        await job.updateProgress('Added command logger');
+
+    } else if (OS == 'debian') {
+        var vpsCreateRes = await shell.exec(
+            getCreateCMD(
+                proxID,
+                data.ip,
+                data.password,
+                '/var/lib/vz/template/cache/debian-12-standard_12.12-1_amd64.tar.zst',
+                data.storage,
+                data
+            )
+        );
+
+        // console.log(vpsCreateRes);
+
+        if (vpsCreateRes.stderr.length > 0) throw new Error(`Error: ${vpsCreateRes.stderr}`);
+
+        // console.log((await shell.exec('pct start ' + proxID)).stderr);
+
+        await job.updateProgress('Empty vps created');
+
+        if (fs.existsSync('/etc/pve/firewall/100.fw')) {
+            console.log((await shell.exec(`cp /etc/pve/firewall/100.fw /etc/pve/firewall/${proxID}.fw`)).stderr);
+            await job.updateProgress('Added firewall rules.');
+        }
+        await shell.exec(`pct exec ${proxID} sh -- -c "apt update -y"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "apt install -y openssh zsh git wget curl htop sudo bash htop neofetch"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"`);
+        // sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd
+        await shell.exec(`pct exec ${proxID} sh -- -c "rc-update add sshd"`);
+        await job.updateProgress('Allow ssh');
+
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tFree VPS by ErtixNodes.' > /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\t' >> /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tPackage manager: apk' >> /etc/motd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tYour vps ID: ${data.shortID}' >> /etc/motd"`);
+
+        await job.updateProgress('Motd');
+
+        await shell.exec(`pct exec ${proxID} sh -- -c "bash <(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`);
+        await job.updateProgress('Oh my zsh');
+
+        await shell.exec(`pct exec ${proxID} sh -- -c "sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd"`);
+        await lib.addForward(data.portID, 22, data.sshPort, data.ip);
+
+        await job.updateProgress('Port forwarded!');
+
+        await shell.exec('pct reboot ' + proxID);
+
+        await job.updateProgress('VPS restarted!');
+    } else {
+        return new Error('Invalid OS!' + OS);
+    }
 
     data.proxID = proxID;
     data.ok = true;
