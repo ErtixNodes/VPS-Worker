@@ -22,6 +22,7 @@ module.exports = async (job) => {
     await job.updateProgress(`Got proxmox ID: ${proxID}`);
 
     if (OS == 'alpine') {
+        data.ostype = 'alpine';
         var vpsCreateRes = await shell.exec(getCreateCMD(proxID, data.ip, data.password, '/var/lib/vz/template/cache/alpine-3.19-default_20240207_amd64.tar.xz', data.storage, data));
 
         // console.log(vpsCreateRes);
@@ -82,6 +83,7 @@ module.exports = async (job) => {
         await job.updateProgress('Added command logger');
 
     } else if (OS == 'debian') {
+        data.ostype = 'debian';
         var vpsCreateRes = await shell.exec(
             getCreateCMD(
                 proxID,
@@ -155,7 +157,7 @@ function getCreateCMD(id, ip, password, path, storage, data) {
     cmd += `--memory=1024 `;
     cmd += `--cmode=shell `;
     cmd += `--net0 name=eth0,bridge=vmbr0,firewall=1,gw=${data.subnet},ip=${ip}/16,rate=3 `;
-    cmd += `--ostype=alpine `;
+    cmd += `--ostype=${data.ostype} `;
     cmd += `--password ${password} `;
     cmd += `--start=1 `;
     cmd += `--unprivileged=1 `;
