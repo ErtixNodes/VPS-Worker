@@ -110,10 +110,10 @@ module.exports = async (job) => {
             await job.updateProgress('Added firewall rules.');
         }
         await shell.exec(`pct exec ${proxID} sh -- -c "apt update -y"`);
-        await shell.exec(`pct exec ${proxID} sh -- -c "apt install -y openssh zsh git micro nano wget curl htop sudo bash htop neofetch"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "apt install -y openssh-client zsh git micro nano wget curl htop sudo bash htop neofetch"`);
         await shell.exec(`pct exec ${proxID} sh -- -c "echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"`);
         // sed -i 's#/bin/ash#/bin/zsh#' /etc/passwd
-        // await shell.exec(`pct exec ${proxID} sh -- -c "rc-update add sshd"`);
+        await shell.exec(`pct exec ${proxID} sh -- -c "service sshd restart"`);
         await job.updateProgress('Allow ssh');
 
         await shell.exec(`pct exec ${proxID} sh -- -c "echo '\tFree VPS by ${BRAND}.' > /etc/motd"`);
